@@ -1,3 +1,5 @@
+#pragma tabsize 0
+
 #include <sourcemod>
 
 #if SOURCEMOD_V_MINOR < 10
@@ -7,11 +9,15 @@
 #include <lvl_ranks>
 #include <shop>
 
+/*
+    Thanks to Wend4r for the help.
+*/
+
 public Plugin myinfo = { 
     name = "LTS", 
-    author = "bat9xxx", 
+    author = "bat9xxx || Thanks to Wend4r for the help.", 
     version = "2.0", 
-    url = "github.com/bat9xxxru"
+    url = "github.com/bat9xxxru || Discord: Wend4r#0001"
 }
 
 Database _database;
@@ -20,9 +26,8 @@ KeyValues _collection;
 
 char _table[64];
 
-char _uid[MAXPLAYERS + 1][32];
-
-stock char[] GetSteamID2(int iAccountID){
+stock char[] GetSteamID2(int iAccountID)
+{
     static char sSteamID2[22] = "STEAM_";
 
     if(!sSteamID2[6])
@@ -84,13 +89,9 @@ public void OnMapStart(){
     if(!_collection.ImportFromFile(path)) SetFailState("File is not found (%s)", path);
 }
 
-public void OnClientPostAdminCheck(int client){
-    GetClientAuthId(client, AuthId_Steam2, _uid[client], 32);
-}
-
 public void OnResetPlayerStats(int client, int id){
     char query[128];
-    _database.Format(query, 128, "UPDATE `%s` SET `lastrank` = '0' WHERE `steam` = '%s'", _table, client ? _uid[client] : GetSteamID2(id));
+    _database.Format(query, 128, "UPDATE `%s` SET `lastrank` = '0' WHERE `steam` = '%s'", _table, client ? GetSteamID2(GetSteamAccountID(client)) : GetSteamID2(id));
     _database.Query(Stub, query);
 }
 
@@ -102,12 +103,12 @@ public void OnLevelChangedPost(int client, int newLevel, int oldLevel){
         data.WriteCell(client);
         data.WriteCell(newLevel);
 
-        _database.Format(query, 128, "SELECT `lastrank` FROM `%s` WHERE `steam` = '%s'", _table, _uid[client]);
+        _database.Format(query, 128, "SELECT `lastrank` FROM `%s` WHERE `steam` = '%s'", _table, GetSteamID2(GetSteamAccountID(client)));
         _database.Query(OnLevelChangedPostCallBack, query, data);
     }
 }
 
-public void LevelChanged_callback(Database db, DBResultSet result, const char[] error, DataPack data){
+public void OnLevelChangedPostCallBack(Database db, DBResultSet result, const char[] error, DataPack data){
     if(!result){
         LogError("%s", error);
         return;
@@ -149,10 +150,12 @@ public void LevelChanged_callback(Database db, DBResultSet result, const char[] 
                         while(_collection.GotoNextKey(true)){
                             _collection.GetString("category", buffer, 128, "0");
                             if(!StringToInt(buffer)) continue;
+                            IntToString(buffer, buffer, 128);
                             int category = Shop_GetCategoryId(buffer);
 
                             _collection.GetString("item", buffer, 128, "0");
                             if(!StringToInt(buffer)) continue;
+                            IntToString(buffer, buffer, 128);
                             int item = Shop_GetItemId(category, buffer);
 
                             Shop_GiveClientItem(client, item);
@@ -164,6 +167,7 @@ public void LevelChanged_callback(Database db, DBResultSet result, const char[] 
             }
         }
 
-        //Запрос в БД
+        _database.Format(buffer, 128, "UPDATE `%s` SET `lastrank` = '%i' WHERE `steam` = '%s'", _table, newLevel, GetSteamID2(GetSteamAccountID(client)));
+        _database.Query(Stub, buffer);
     }
 }
