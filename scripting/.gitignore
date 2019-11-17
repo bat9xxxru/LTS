@@ -2,3 +2,4 @@ include/
 compiled/
 compile.exe
 spcomp.exe
+compile.dat
