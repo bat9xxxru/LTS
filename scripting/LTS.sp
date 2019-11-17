@@ -40,11 +40,11 @@ public void LR_OnCoreIsReady(){
 
 public Action CommandReload(int client, int args){
     OnMapStart();
-    
+
     return Plugin_Handled;
 }
 
-public void OnMapStart(){
+public void OnMapStart(){ 
     char path[PLATFORM_MAX_PATH];
     BuildPath(Path_SM, path, PLATFORM_MAX_PATH, "configs/levels_ranks/lts.ini");
 
