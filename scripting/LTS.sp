@@ -63,8 +63,8 @@ public void LR_OnCoreIsReady(){
     SQL_FastQuery(_database, query);
     SQL_UnlockDatabase(_database);
 
-    //LR_Hook(LR_OnResetPlayerStats, OnResetPlayerStats);
-    //LR_Hook(LR_OnLevelChangedPost, OnLevelChangedPost);
+    LR_Hook(LR_OnResetPlayerStats, OnResetPlayerStats);
+    LR_Hook(LR_OnLevelChangedPost, OnLevelChangedPost);
 }
 
 public Action CommadReload(int client, int args){
@@ -91,9 +91,79 @@ public void OnClientPostAdminCheck(int client){
 public void OnResetPlayerStats(int client, int id){
     char query[128];
     _database.Format(query, 128, "UPDATE `%s` SET `lastrank` = '0' WHERE `steam` = '%s'", _table, client ? _uid[client] : GetSteamID2(id));
-   // _database.Query(Stub, query);
+    _database.Query(Stub, query);
 }
 
 public void OnLevelChangedPost(int client, int newLevel, int oldLevel){
+    if(newLevel > oldLevel && _database){
+        char query[128];
 
+        DataPack data = new DataPack();
+        data.WriteCell(client);
+        data.WriteCell(newLevel);
+
+        _database.Format(query, 128, "SELECT `lastrank` FROM `%s` WHERE `steam` = '%s'", _table, _uid[client]);
+        _database.Query(OnLevelChangedPostCallBack, query, data);
+    }
+}
+
+public void LevelChanged_callback(Database db, DBResultSet result, const char[] error, DataPack data){
+    if(!result){
+        LogError("%s", error);
+        return;
+    }
+
+    data.Reset();
+    _collection.Rewind();
+
+    int client = data.ReadCell();
+
+    if(!IsClientInGame(client)) return;
+
+    int newLevel = data.ReadCell();
+
+    delete data;
+
+    if(result.HasResults && result.FetchRow()){
+        char buffer[128];
+
+        IntToString(newLevel, buffer, 128);
+
+        if(_collection.JumpToKey(buffer)){
+            int credits = _collection.GetNum("credits", 0);
+            int gold = _collection.GetNum("gold", 0);
+
+            if(credits){
+                Shop_GiveClientCredits(client, credits);
+                //PrintToChat
+            }
+
+            if(gold){
+                Shop_GiveClientGold(client, gold);
+                //PrintToChat
+            }
+
+            if(_collection.GotoNextKey()){
+                if(_collection.GetSectionName(buffer, 128)){
+                    if(StrEqual(buffer, "items")){
+                        while(_collection.GotoNextKey(true)){
+                            _collection.GetString("category", buffer, 128, "0");
+                            if(!StringToInt(buffer)) continue;
+                            int category = Shop_GetCategoryId(buffer);
+
+                            _collection.GetString("item", buffer, 128, "0");
+                            if(!StringToInt(buffer)) continue;
+                            int item = Shop_GetItemId(category, buffer);
+
+                            Shop_GiveClientItem(client, item);
+
+                            //PrintToChat
+                        }
+                    }
+                }
+            }
+        }
+
+        //Запрос в БД
+    }
 }
