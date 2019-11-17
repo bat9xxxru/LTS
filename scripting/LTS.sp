@@ -136,31 +136,31 @@ public void OnLevelChangedPostCallBack(Database db, DBResultSet result, const ch
 
             if(credits){
                 Shop_GiveClientCredits(client, credits);
-                //PrintToChat
+                LR_PrintToChat(client, true, "%t", "OnGiveCredits");
             }
 
             if(gold){
                 Shop_GiveClientGold(client, gold);
-                //PrintToChat
+                LR_PrintToChat(client, true, "%t", "OnGiveGold");
             }
 
             if(_collection.GotoNextKey()){
                 if(_collection.GetSectionName(buffer, 128)){
                     if(StrEqual(buffer, "items")){
                         while(_collection.GotoNextKey(true)){
-                            _collection.GetString("category", buffer, 128, "0");
-                            if(!StringToInt(buffer)) continue;
-                            IntToString(buffer, buffer, 128);
-                            int category = Shop_GetCategoryId(buffer);
+                            _collection.GetString("category", buffer, 128);
+                            CategoryId category = Shop_GetCategoryId(buffer);
+                            if(category == INVALID_CATEGORY) continue;
 
-                            _collection.GetString("item", buffer, 128, "0");
-                            if(!StringToInt(buffer)) continue;
-                            IntToString(buffer, buffer, 128);
-                            int item = Shop_GetItemId(category, buffer);
+                            _collection.GetString("item", buffer, 128);
+                            ItemId item = Shop_GetItemId(category, buffer);
 
+                            if(item == INVALID_ITEM) continue;
                             Shop_GiveClientItem(client, item);
 
-                            //PrintToChat
+                            _collection.GetString("title", buffer, 128, "0");
+
+                            if(StringToInt(buffer)) LR_PrintToChat(client, true, "%t", "OnGiveItem", buffer);
                         }
                     }
                 }
