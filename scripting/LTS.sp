@@ -23,6 +23,20 @@ char _table[64];
 
 char _uid[MAXPLAYERS + 1][32];
 
+stock char[] GetSteamID2(int iAccountID){
+    static char sSteamID2[22] = "STEAM_";
+
+    if(!sSteamID2[6])
+    {
+        sSteamID2[6] = '0' + view_as<int>(GetEngineVersion() == Engine_CSGO);
+        sSteamID2[7] = ':';
+    }
+
+    FormatEx(sSteamID2[8], 14, "%i:%i", iAccountID & 1, iAccountID >>> 1);
+
+    return sSteamID2;
+}
+
 public void OnPluginStart(){
     if(LR_IsLoaded()) LR_OnCoreIsReady();
 
@@ -36,7 +50,7 @@ public void LR_OnCoreIsReady(){
 
     if(_database != null) delete _database;
 
-    if(!(_database = LR_GetDatabase())) SetFailState("Could not connect to the database");
+    _database = LR_GetDatabase();
 
     char query[128];
 
@@ -46,7 +60,7 @@ public void LR_OnCoreIsReady(){
     SQL_FastQuery(_database, query);
     SQL_UnlockDatabase(_database);
 
-   // LR_Hook(LR_OnResetPlayerStats, OnResetPlayerStats);
+    LR_Hook(LR_OnResetPlayerStats, OnResetPlayerStats);
     LR_Hook(LR_OnLevelChangedPost, OnLevelChangedPost);
 }
 
@@ -71,9 +85,14 @@ public void OnClientPostAdminCheck(int client){
     GetClientAuthId(client, AuthId_Steam2, _uid[client], 32);
 }
 
-/*public void OnResetPlayerStats(int client, int id){
-
-}*/
+public void OnResetPlayerStats(int client, int id){
+    char query[128];
+    _database.Format(query, 128, "UPDATE `%s` SET `lastrank` = '0' WHERE `stem` = '%s'", _table, IsClientInGame(client) ? _uid[client] : GetSteamID2(id));
+    
+    SQL_LockDatabase(_database);
+    SQL_FastQuery(_database, query);
+    SQL_UnlockDatabase(_database);
+}
 
 public void OnLevelChangedPost(int client, int newLevel, int oldLevel){
 
