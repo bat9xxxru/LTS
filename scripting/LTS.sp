@@ -9,7 +9,6 @@
 
 public Plugin myinfo = { 
     name = "LTS", 
-    discription = "Levels Ranks for Shop Integration",
     author = "bat9xxx", 
     version = "2.0", 
     url = "github.com/bat9xxxru"
@@ -37,6 +36,10 @@ stock char[] GetSteamID2(int iAccountID){
     return sSteamID2;
 }
 
+public void Stub(Database db, DBResultSet result, const char[] error, any data){
+    return;
+}
+
 public void OnPluginStart(){
     if(LR_IsLoaded()) LR_OnCoreIsReady();
 
@@ -60,11 +63,11 @@ public void LR_OnCoreIsReady(){
     SQL_FastQuery(_database, query);
     SQL_UnlockDatabase(_database);
 
-    LR_Hook(LR_OnResetPlayerStats, OnResetPlayerStats);
-    LR_Hook(LR_OnLevelChangedPost, OnLevelChangedPost);
+    //LR_Hook(LR_OnResetPlayerStats, OnResetPlayerStats);
+    //LR_Hook(LR_OnLevelChangedPost, OnLevelChangedPost);
 }
 
-public Action CommandReload(int client, int args){
+public Action CommadReload(int client, int args){
     OnMapStart();
 
     return Plugin_Handled;
@@ -87,11 +90,8 @@ public void OnClientPostAdminCheck(int client){
 
 public void OnResetPlayerStats(int client, int id){
     char query[128];
-    _database.Format(query, 128, "UPDATE `%s` SET `lastrank` = '0' WHERE `stem` = '%s'", _table, IsClientInGame(client) ? _uid[client] : GetSteamID2(id));
-    
-    SQL_LockDatabase(_database);
-    SQL_FastQuery(_database, query);
-    SQL_UnlockDatabase(_database);
+    _database.Format(query, 128, "UPDATE `%s` SET `lastrank` = '0' WHERE `steam` = '%s'", _table, client ? _uid[client] : GetSteamID2(id));
+   // _database.Query(Stub, query);
 }
 
 public void OnLevelChangedPost(int client, int newLevel, int oldLevel){
