@@ -1,0 +1,21 @@
+"Phrases"
+{
+    "OnGiveCredits"
+    {
+        "#format"   "{1:s}
+        "ru"        "{GREEN}Ваш бонус: {1} кр. Так держать!"
+        "en"        "{GREEN}Your bonus: {1} cr. Keep it up!"
+    }
+    "OnGiveGold"
+    {
+        "#format"   "{1:s}
+        "ru"        "{GREEN}Ваш бонус: {1} gold. Так держать!"
+        "en"        "{GREEN}Your bonus: {1} gold. Keep it up!"
+    }
+    "OnGiveItem"
+    {
+        "#format"   "{1:s}
+        "ru"        "{GREEN}Ваш бонус: {1}. Так держать!"
+        "en"        "{GREEN}Your bonus: {1}. Keep it up!"
+    }
+}
