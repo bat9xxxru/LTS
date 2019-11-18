@@ -96,7 +96,7 @@ public void OnResetPlayerStats(int client, int id){
 }
 
 public void OnLevelChangedPost(int client, int newLevel, int oldLevel){
-    if(newLevel > oldLevel && _database){
+    if(newLevel >= oldLevel && _database){
         char query[128];
 
         DataPack data = new DataPack();
@@ -118,56 +118,49 @@ public void OnLevelChangedPostCallBack(Database db, DBResultSet result, const ch
     _collection.Rewind();
 
     int client = data.ReadCell();
-
     if(!IsClientInGame(client)) return;
 
     int newLevel = data.ReadCell();
 
     delete data;
 
+    char buffer[128];
+
     if(result.HasResults && result.FetchRow()){
-        char buffer[128];
+        if(result.FetchInt(0) < newLevel){
+            IntToString(newLevel, buffer, 128);
 
-        IntToString(newLevel, buffer, 128);
+            if(_collection.JumpToKey(buffer)){
+                int credits = _collection.GetNum("credits", 0);
+                if(credits){
+                    Shop_GiveClientCredits(client, credits);
+                    LR_PrintToChat(client, true, "%t", "OnGiveCredits", credits);
+                }
 
-        if(_collection.JumpToKey(buffer)){
-            int credits = _collection.GetNum("credits", 0);
-            int gold = _collection.GetNum("gold", 0);
+                if(_collection.GotoFirstSubKey(true)){
+                    if(_collection.GetSectionName(buffer, 128) && _collection.GotoFirstSubKey(true)){
+                        if(StrEqual(buffer, "items", false)){
+                            do{
+                                _collection.GetString("category", buffer, 128);
+                                CategoryId category = Shop_GetCategoryId(buffer);
+                                if(category == INVALID_CATEGORY) continue;
 
-            if(credits){
-                Shop_GiveClientCredits(client, credits);
-                LR_PrintToChat(client, true, "%t", "OnGiveCredits");
-            }
+                                _collection.GetString("item", buffer, 128);
+                                ItemId item = Shop_GetItemId(category, buffer);
+                                if(item == INVALID_ITEM) continue;
 
-            if(gold){
-                Shop_GiveClientGold(client, gold);
-                LR_PrintToChat(client, true, "%t", "OnGiveGold");
-            }
+                                Shop_GiveClientItem(client, item);
 
-            if(_collection.GotoNextKey()){
-                if(_collection.GetSectionName(buffer, 128)){
-                    if(StrEqual(buffer, "items")){
-                        while(_collection.GotoNextKey(true)){
-                            _collection.GetString("category", buffer, 128);
-                            CategoryId category = Shop_GetCategoryId(buffer);
-                            if(category == INVALID_CATEGORY) continue;
-
-                            _collection.GetString("item", buffer, 128);
-                            ItemId item = Shop_GetItemId(category, buffer);
-
-                            if(item == INVALID_ITEM) continue;
-                            Shop_GiveClientItem(client, item);
-
-                            _collection.GetString("title", buffer, 128, "0");
-
-                            if(StringToInt(buffer)) LR_PrintToChat(client, true, "%t", "OnGiveItem", buffer);
+                                _collection.GetString("title", buffer, 128, "empty");
+                                if(!StrEqual(buffer, "empty", false)) LR_PrintToChat(client, true, "%t", "OnGiveItem", buffer);
+                            }while(_collection.GotoNextKey(true));
                         }
                     }
                 }
             }
-        }
 
-        _database.Format(buffer, 128, "UPDATE `%s` SET `lastrank` = '%i' WHERE `steam` = '%s'", _table, newLevel, GetSteamID2(GetSteamAccountID(client)));
-        _database.Query(Stub, buffer);
+            _database.Format(buffer, 128, "UPDATE `%s` SET `lastrank` = '%i' WHERE `steam` = '%s'", _table, newLevel, GetSteamID2(GetSteamAccountID(client)));
+            _database.Query(Stub, buffer);
+        }
     }
 }
