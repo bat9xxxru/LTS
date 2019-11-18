@@ -16,7 +16,7 @@
 public Plugin myinfo = { 
     name = "LTS", 
     author = "bat9xxx || Thanks to Wend4r for the help.", 
-    version = "2.0", 
+    version = "2.1", 
     url = "github.com/bat9xxxru || Discord: Wend4r#0001"
 }
 
@@ -91,7 +91,7 @@ public void OnMapStart(){
 
 public void OnResetPlayerStats(int client, int id){
     char query[128];
-    _database.Format(query, 128, "UPDATE `%s` SET `lastrank` = '0' WHERE `steam` = '%s'", _table, client ? GetSteamID2(GetSteamAccountID(client)) : GetSteamID2(id));
+    _database.Format(query, 128, "UPDATE `%s` SET `lastrank` = '0' WHERE `steam` = '%s'", _table, GetSteamID2(id));
     _database.Query(Stub, query);
 }
 
@@ -134,7 +134,7 @@ public void OnLevelChangedPostCallBack(Database db, DBResultSet result, const ch
                 int credits = _collection.GetNum("credits", 0);
                 if(credits){
                     Shop_GiveClientCredits(client, credits);
-                    LR_PrintToChat(client, true, "%t", "OnGiveCredits", credits);
+                    LR_PrintToChat(client, true, "%T", "OnGiveCredits", client, credits);
                 }
 
                 if(_collection.GotoFirstSubKey(true)){
@@ -152,7 +152,7 @@ public void OnLevelChangedPostCallBack(Database db, DBResultSet result, const ch
                                 Shop_GiveClientItem(client, item);
 
                                 _collection.GetString("title", buffer, 128, "empty");
-                                if(!StrEqual(buffer, "empty", false)) LR_PrintToChat(client, true, "%t", "OnGiveItem", buffer);
+                                if(!StrEqual(buffer, "empty", false)) LR_PrintToChat(client, true, "%T", "OnGiveItem", client, buffer);
                             }while(_collection.GotoNextKey(true));
                         }
                     }
