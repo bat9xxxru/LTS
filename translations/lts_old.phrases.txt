@@ -2,13 +2,13 @@
 {
     "OnGiveCredits"
     {
-        "#format"   "{1:i}
+        "#format"   "{1:i}"
         "ru"        "{GREEN}Ваш бонус: {1} кр. Так держать!"
         "en"        "{GREEN}Your bonus: {1} cr. Keep it up!"
     }
     "OnGiveItem"
     {
-        "#format"   "{1:s}
+        "#format"   "{1:s}"
         "ru"        "{GREEN}Ваш бонус: {1}. Так держать!"
         "en"        "{GREEN}Your bonus: {1}. Keep it up!"
     }
